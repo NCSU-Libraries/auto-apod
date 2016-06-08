@@ -4,7 +4,7 @@ This application loads the [Astronomy Picture of the Day](http://apod.nasa.gov/a
 
 The application also utilizes the Google API urlshortener to create a direct link to the image's page on the official Astronomy Picture of the Day website.
 
-The version on GitHub uses the demo NASA API key for testing purposes only and does not include the Google API credentials. To run in a complete form include a config.json file with your NASA API key and your Google API key in the ./js folder. for example:
+The version on GitHub uses the demo NASA API key for testing purposes only and does not include the Google API credentials. To run in a complete form include a config.json file with your NASA API key and your Google API key in the ./js folder. For example:
 ```json
 {
   "keyNASA": "yourNASAAPIkey",
