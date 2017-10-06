@@ -1,6 +1,6 @@
 Auto-APOD
 ---
-This application loads the [Astronomy Picture of the Day](http://apod.nasa.gov/apod/astropix.html) (APOD) using the NASA API and automatically scales the image to fit any display size. By default it does not load videos or images with a portrait aspect ratio (You can choose to enable videos in main.js by setting `noVideo = false`). Initially, the application will attempt to load APOD content from the current date (today). If the content does not meet the previous conditions (i.e., content is video or portrait aspect image) the application will attempt to load APOD content from a random date.
+This application loads the [Astronomy Picture of the Day](http://apod.nasa.gov/apod/astropix.html) (APOD) using the NASA API and automatically scales the image to fit any display size. By default it does not load videos or images with a portrait aspect ratio (You can choose to enable videos in main.js by setting `allowVideo = true`). Initially, the application will attempt to load APOD content from the current date (today). If the content does not meet the previous conditions (i.e., content is video or portrait aspect image) the application will attempt to load APOD content from a random date.
 
 The application also utilizes the Google API urlshortener to create a direct link to the image's page on the official Astronomy Picture of the Day website.
 

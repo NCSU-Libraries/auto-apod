@@ -2,18 +2,16 @@
 function loadData(date) {
 
   //load necessary info and run
+  const apiKeys = {};
   $.getJSON("./js/config.json")
     .done( function(config) {
-      //supply API keys from config file,
-      // use demo key if no NASA API key in config.json
-      var apiKeys = {};
+      //supply API keys from config file, use demo key if no NASA API key in config.json
       apiKeys.nasa = config.keyNASA || "DEMO_KEY";
       apiKeys.short = config.keyUrlShortener || undefined;
       requestTestAdd(apiKeys, date);
     })
     .fail( function() {
       //if load fails fall back on demo key
-      var apiKeys = {};
       apiKeys.nasa = "DEMO_KEY";
       apiKeys.short = undefined;
       requestTestAdd(apiKeys, date);
@@ -24,7 +22,7 @@ function loadData(date) {
 //send request, do necessary tests, and add image
 function requestTestAdd(keys, date) {
   //compose query usng date and api key, ask for concept tags and hd image
-  var query = "https://api.nasa.gov/planetary/apod?date=" +  date +
+  const query = "https://api.nasa.gov/planetary/apod?date=" +  date +
     "&hd=True&api_key=" + keys.nasa;
 
   //http request
@@ -34,19 +32,19 @@ function requestTestAdd(keys, date) {
       data.shortKey = keys.short;
       //test if result is not an image (is a video)
       if (data.media_type != "image") {
-        //NO VIDEOS?
-        var noVideo = true;
+        //ALLOW VIDEOS?
+        const allowVideo = false;
 
         //if videos are not wanted reload with random date
-        if (noVideo) {
+        if (!allowVideo) {
           //load random content between today and supplied past date
-          var pastDate = new Date(2015,0,1);
           requestTestAdd(
             keys,
-            randomDateFromRange(pastDate, new Date()).toISOString().slice(0,10)
+            randomDateFromRange(new Date(2015,0,1), new Date())
+              .toISOString().slice(0,10)
           );
 
-          console.log("NO VIDEOS!");
+          console.log("NO VIDEOS! Loading an image from a random date");
 
         //if videos are wanted, add video
         } else addVideo(data);
@@ -57,7 +55,7 @@ function requestTestAdd(keys, date) {
       }
     })
     .fail(function(response) {
-      var extraMessage = "";
+      let extraMessage = "";
       //if request fails due to bad API key and "DEMO_KEY" hasn't been used
       if (
         response.responseJSON.error.code === "API_KEY_INVALID" &&
@@ -73,20 +71,29 @@ function requestTestAdd(keys, date) {
     });
 }
 
-//function to get the dimensions of the image for testing aspect
-// (i.e., landscape versus portrait)
+//function to get the dimensions of the image for testing aspect (i.e., landscape versus portrait)
 function testImageSize(keys, data) {
-  //create an image element and add a listener to detect image size
-  // before adding it to the window
-  var img = new Image();
+  //create an image element and add listeners to detect image size before adding it to the window or a load error
+  let img = new Image();
 
-  img.addEventListener("load", function() {
-    var imgWidth = this.width;
-    var imgHeight = this.height;
+  img.onerror = function(error) {
+    console.log("Error loading APOD image from date: " + data.date +
+      ". Loading another image from a random date"
+    )
+    //load random content between today and supplied past date
+    requestTestAdd(
+      keys,
+      randomDateFromRange(new Date(2015,0,1), new Date())
+        .toISOString().slice(0,10)
+    );
+  }
+
+  img.onload = function() {
+    const imgWidth = this.width;
+    const imgHeight = this.height;
 
     //if image aspect ratio is square or portrait reload with random date
     if (imgWidth / imgHeight <= 1) {
-
       //load random content between today and supplied past date
       requestTestAdd(
         keys,
@@ -94,16 +101,14 @@ function testImageSize(keys, data) {
           .toISOString().slice(0,10)
       );
 
-      console.log("NO PORTRAIT ASPECT IMAGES!");
+      console.log("NO PORTRAIT ASPECT IMAGES! Loading another image from a random date");
 
     } else {
 
       //if matchMedia API available create media query based on aspect of image
       if (matchMedia) {
-        //create media query that tests if the aspect of the window is greater
-        // than or equal to the native aspect of the image and add an event
-        // listener that is fired when this changes
-        var mediaQuery = window.matchMedia(
+        //create media query that tests if the aspect of the window is greater than or equal to the native aspect of the image and add an event listener that is fired when this changes
+        const mediaQuery = window.matchMedia(
           "(min-aspect-ratio:" + imgWidth + "/" +
           imgHeight + ")");
         mediaQuery.addListener(aspectChange);
@@ -112,7 +117,7 @@ function testImageSize(keys, data) {
 
       addImage(data);
     }
-  });
+  };
 
   //set the image source for testing the image size on load
   img.src = data.hdurl || data.url;
@@ -121,33 +126,31 @@ function testImageSize(keys, data) {
 
 //function to window add image to window if landscape
 function addImage(data) {
-  var imageUrl = data.hdurl || data.url;
-  var copyright = data.copyright || undefined;
+  const imageUrl = data.hdurl || data.url;
+  const copyright = data.copyright || undefined;
   //content passed all tests
-    var image = $(".main-image");
+  const image = $(".main-image");
 
-    image.css("display", "flex")
-      .attr("src", imageUrl);
+  image.css("display", "flex")
+    .attr("src", imageUrl);
 
-    $(".background-blur").css("background-image", "url(" + imageUrl + ")");
+  $(".background-blur").css("background-image", "url(" + imageUrl + ")");
 
-    $(".main-video").css("display", "none");
+  $(".main-video").css("display", "none");
 
-    $(".image-title").text(data.title);
+  $(".image-title").text(data.title);
 
-    //if image has copyright info add it to display
-    // else remove text from screen
-    if (copyright) {
-      $(".image-copy").css("display", "block");
-      $(".image-copy").text(String.fromCharCode(169) + " " + data.copyright);
-    } else $(".image-copy").css("display", "none");
+  //if image has copyright info add it to display else remove text from screen
+  if (copyright) {
+    $(".image-copy").css("display", "block");
+    $(".image-copy").text(String.fromCharCode(169) + " " + data.copyright);
+  } else $(".image-copy").css("display", "none");
 
-    //if urlshortener API key provided create short url
-    // else provide link to main landing page of APOD
-    if (data.shortKey) {
-      var dateFormat = data.date.replace(/-/g,"").replace(/\d\d/,"");
-      shortenUrl(data.shortKey, dateFormat);
-    } else $(".image-expl").text("apod.nasa.gov/apod/ap");
+  //if urlshortener API key provided create short url else provide link to main landing page of APOD
+  if (data.shortKey) {
+    var dateFormat = data.date.replace(/-/g,"").replace(/\d\d/,"");
+    shortenUrl(data.shortKey, dateFormat);
+  } else $(".image-expl").text("apod.nasa.gov/apod/ap");
 }
 
 //function that handles image sizing to fit any aspect screen
@@ -169,8 +172,7 @@ function aspectChange(mediaQuery) {
   }
 }
 
-//function to setup the short url for linking to the image's page on the
-// APOD website, supply Google API key and the formatted date
+//function to setup the short url for linking to the image's page on the APOD website, supply Google API key and the formatted date
 function shortenUrl(key, dateFormat) {
 
   //function to load the Google url shortener API
@@ -205,8 +207,7 @@ function shortenUrl(key, dateFormat) {
   }
 }
 
-//function to load a random date if current date content is not an image
-// supply two date objects for the range
+//function to load a random date if current date content is not an image supply two date objects for the range
 function randomDateFromRange(olderDate, newerDate) {
   var max = newerDate.getTime();
   var min = olderDate.getTime();
